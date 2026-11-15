@@ -1,0 +1,64 @@
+name: TYC4A ARM64 kernel and Debian candidate
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tyc4a-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check image assembly guards
+        run: python3 scripts/test-assemble-image.py
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential clang lld llvm bc bison flex libssl-dev libelf-dev device-tree-compiler python3 curl xz-utils kmod cpio rsync
+      - name: Build Image, modules and TYC4A DTB
+        run: bash scripts/build-kernel.sh
+      - name: Upload kernel and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TYC4A-Linux-6.18.63-UNTESTED
+          path: artifacts/
+          retention-days: 14
+          if-no-files-found: error
+  debian:
+    needs: kernel
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: TYC4A-Linux-6.18.63-UNTESTED
+          path: artifacts/
+      - name: Install rootfs tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mmdebstrap debian-archive-keyring e2fsprogs fdisk zstd file
+      - name: Build Debian rootfs and SD layout candidate
+        run: sudo bash scripts/build-rootfs.sh
+      - name: Upload Debian candidate and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TYC4A-Debian-trixie-UNTESTED-NO-BOOTLOADER
+          path: artifacts/debian/
+          retention-days: 14
+          if-no-files-found: error

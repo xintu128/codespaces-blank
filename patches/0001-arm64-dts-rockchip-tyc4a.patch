@@ -1,0 +1,355 @@
+--- a/arch/arm64/boot/dts/rockchip/Makefile
++++ b/arch/arm64/boot/dts/rockchip/Makefile
+@@ -279,3 +279,4 @@
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3588-tiger-haikou-haikou-video-demo.dtb
+ rk3588-tiger-haikou-haikou-video-demo-dtbs := rk3588-tiger-haikou.dtb \
+ 	rk3588-tiger-haikou-video-demo.dtbo
++dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-tyc4a.dtb
+--- a/Documentation/devicetree/bindings/arm/rockchip.yaml
++++ b/Documentation/devicetree/bindings/arm/rockchip.yaml
+@@ -14,6 +14,11 @@
+     const: '/'
+   compatible:
+     oneOf:
++
++      - description: TYC4A RK3566 Telecom Notebook
++        items:
++          - const: rockchip,rk3566-telecom-notebook
++          - const: rockchip,rk3566
+ 
+       - description: 96boards RK3399 Ficus (ROCK960 Enterprise Edition)
+         items:
+--- /dev/null
++++ b/arch/arm64/boot/dts/rockchip/rk3566-tyc4a.dts
+@@ -0,0 +1,331 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++
++/dts-v1/;
++
++#include "rk3566.dtsi"
++
++/ {
++
++    
++
++    model = "Rockchip RK3566 Telecom Notebook Board";
++
++    compatible = "rockchip,rk3566-telecom-notebook",
++                 "rockchip,rk3566";
++};
++
++/*
++ * TYC4A removable SD card
++ * Vendor controller: fe2b0000
++ */
++&sdmmc0 {
++    bus-width = <4>;
++    cap-sd-highspeed;
++    disable-wp;
++    vmmc-supply = <&vcc3v3_sd>;
++    vqmmc-supply = <&vccio_sd>;
++
++    pinctrl-names = "default";
++    pinctrl-0 = <&sdmmc0_bus4
++                 &sdmmc0_clk
++                 &sdmmc0_cmd
++                 &sdmmc0_det>;
++
++    status = "disabled";
++};
++
++/*
++ * TYC4A RTL8822CS SDIO
++ * Vendor controller: fe2c0000
++ */
++&sdmmc1 {
++    bus-width = <4>;
++    cap-sdio-irq;
++    keep-power-in-suspend;
++    non-removable;
++
++    pinctrl-names = "default";
++    pinctrl-0 = <&sdmmc1_bus4
++                 &sdmmc1_cmd
++                 &sdmmc1_clk>;
++
++    status = "disabled";
++};
++
++/*
++ * TYC4A internal 32GB eMMC
++ * Vendor controller: fe310000
++ */
++&sdhci {
++    bus-width = <8>;
++    non-removable;
++
++    status = "disabled";
++};
++
++/*
++ * TYC4A RK809 PMIC - V0.5 structural integration.
++ *
++ * Vendor node: i2c@fdd40000/pmic@20
++ * IRQ GPIO: gpio@fdd60000, pin 3, level-low
++ *
++ * PMIC disabled until all essential regulator
++ * rails and pinctrl are correctly ported.
++ */
++&i2c0 {
++    status = "disabled";
++
++    rk809: pmic@20 {
++        compatible = "rockchip,rk809";
++        reg = <0x20>;
++
++        interrupt-parent = <&gpio0>;
++        interrupts = <3 8>;
++
++        #clock-cells = <1>;
++
++        status = "disabled";
++
++                vcc1-supply = <&vcc3v3_sys>;
++        vcc2-supply = <&vcc3v3_sys>;
++        vcc3-supply = <&vcc3v3_sys>;
++        vcc4-supply = <&vcc3v3_sys>;
++        vcc5-supply = <&vcc3v3_sys>;
++        vcc6-supply = <&vcc3v3_sys>;
++        vcc7-supply = <&vcc3v3_sys>;
++        vcc8-supply = <&vcc3v3_sys>;
++        vcc9-supply = <&vcc3v3_sys>;
++
++        
++        pinctrl-names = "default";
++        pinctrl-0 = <&tyc4a_pmic_int>;
++
++        regulators {
++
++				vdd_logic: DCDC_REG1 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0xdbba0>;
++					regulator-max-microvolt = <0x149970>;
++					regulator-init-microvolt = <0xdbba0>;
++					regulator-ramp-delay = <0x1771>;
++					regulator-initial-mode = <0x02>;
++					regulator-name = "vdd_logic";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vdd_gpu: DCDC_REG2 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x7a120>;
++					regulator-max-microvolt = <0x149970>;
++					regulator-init-microvolt = <0xdbba0>;
++					regulator-ramp-delay = <0x1771>;
++					regulator-initial-mode = <0x02>;
++					regulator-name = "vdd_gpu";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vcc_ddr: DCDC_REG3 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-initial-mode = <0x02>;
++					regulator-name = "vcc_ddr";
++
++					regulator-state-mem {
++						regulator-on-in-suspend;
++					};
++				};
++
++				vdd_npu: DCDC_REG4 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x7a120>;
++					regulator-max-microvolt = <0x149970>;
++					regulator-init-microvolt = <0xdbba0>;
++					regulator-ramp-delay = <0x1771>;
++					regulator-initial-mode = <0x02>;
++					regulator-name = "vdd_npu";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vdda0v9_image: LDO_REG1 {
++					regulator-boot-on;
++					regulator-always-on;
++					regulator-min-microvolt = <0xdbba0>;
++					regulator-max-microvolt = <0xdbba0>;
++					regulator-name = "vdda0v9_image";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vdda_0v9: LDO_REG2 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0xdbba0>;
++					regulator-max-microvolt = <0xdbba0>;
++					regulator-name = "vdda_0v9";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vdda0v9_pmu: LDO_REG3 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0xdbba0>;
++					regulator-max-microvolt = <0xdbba0>;
++					regulator-name = "vdda0v9_pmu";
++
++					regulator-state-mem {
++						regulator-on-in-suspend;
++						regulator-suspend-microvolt = <0xdbba0>;
++					};
++				};
++
++				vccio_acodec: LDO_REG4 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x325aa0>;
++					regulator-max-microvolt = <0x325aa0>;
++					regulator-name = "vccio_acodec";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vccio_sd: LDO_REG5 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x325aa0>;
++					regulator-max-microvolt = <0x325aa0>;
++					regulator-name = "vccio_sd";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vcc3v3_pmu: LDO_REG6 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x325aa0>;
++					regulator-max-microvolt = <0x325aa0>;
++					regulator-name = "vcc3v3_pmu";
++
++					regulator-state-mem {
++						regulator-on-in-suspend;
++						regulator-suspend-microvolt = <0x325aa0>;
++					};
++				};
++
++				vcca_1v8: LDO_REG7 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x1b7740>;
++					regulator-max-microvolt = <0x1b7740>;
++					regulator-name = "vcca_1v8";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vcca1v8_pmu: LDO_REG8 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x1b7740>;
++					regulator-max-microvolt = <0x1b7740>;
++					regulator-name = "vcca1v8_pmu";
++
++					regulator-state-mem {
++						regulator-on-in-suspend;
++						regulator-suspend-microvolt = <0x1b7740>;
++					};
++				};
++
++				vcca1v8_image: LDO_REG9 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x1b7740>;
++					regulator-max-microvolt = <0x1b7740>;
++					regulator-name = "vcca1v8_image";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vcc_1v8: DCDC_REG5 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-min-microvolt = <0x1b7740>;
++					regulator-max-microvolt = <0x1b7740>;
++					regulator-name = "vcc_1v8";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vcc_3v3: SWITCH_REG1 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-name = "vcc_3v3";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++
++				vcc3v3_sd: SWITCH_REG2 {
++					regulator-always-on;
++					regulator-boot-on;
++					regulator-name = "vcc3v3_sd";
++
++					regulator-state-mem {
++						regulator-off-in-suspend;
++					};
++				};
++			};
++    };
++};
++
++
++/ {
++    vcc3v3_sys: regulator-vcc3v3-sys {
++            compatible = "regulator-fixed";
++            regulator-name = "vcc3v3_sys";
++            regulator-min-microvolt = <3300000>;
++            regulator-max-microvolt = <3300000>;
++            regulator-always-on;
++            regulator-boot-on;
++        };
++};
++
++
++/*
++ * TYC4A RK809 interrupt pin
++ * Vendor: GPIO0 pin 3, GPIO function.
++ * Keep PMIC and I2C disabled for offline validation.
++ */
++&pinctrl {
++    tyc4a-pmic {
++        tyc4a_pmic_int: pmic-int {
++            rockchip,pins = <0 3 0 &pcfg_pull_up>;
++        };
++    };
++};

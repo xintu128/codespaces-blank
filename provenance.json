@@ -1,0 +1,24 @@
+{
+  "kernel_version": "6.18.63",
+  "kernel_archive_sha256": "81764a545072d160748beff4d9de2e7d95aa9f16e8261110288f067a2cc61d71",
+  "archive_checked_against_kernel_org": true,
+  "files": [
+    {
+      "path": "board/rk3566-tyc4a.dts",
+      "sha256": "f9845e2a0e0b8b42eba913ffd5dc3e57598160c554cc8d2238d21c83b722fe7a"
+    },
+    {
+      "path": "originals/0001-arm64-dts-rockchip-add-tyc4a.patch",
+      "sha256": "52118f67a7b9588a8cbd9f96245d0888313eb62c7e71aa88cf199892a3c6e73b"
+    },
+    {
+      "path": "originals/0001-arm64-dts-rockchip-tyc4a.patch",
+      "sha256": "9bcecb89b2c814700f98a804fe79e647aa8c7db513310f94845c44180e9f75f4"
+    },
+    {
+      "path": "patches/0001-arm64-dts-rockchip-tyc4a.patch",
+      "sha256": "9bcecb89b2c814700f98a804fe79e647aa8c7db513310f94845c44180e9f75f4"
+    }
+  ],
+  "hardware_boot_tested": false
+}
