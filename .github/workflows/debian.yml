@@ -1,0 +1,81 @@
+name: Rebuild Debian from compiled TYC4A kernel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/debian.yml
+      - scripts/build-rootfs.sh
+      - scripts/assemble-image.py
+  workflow_dispatch:
+    inputs:
+      kernel_run_id:
+        description: Kernel build run ID; empty selects the latest successful kernel job
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  debian:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install rootfs tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mmdebstrap debian-archive-keyring e2fsprogs fdisk zstd file kmod gh
+      - name: Select a compiled kernel
+        id: kernel
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_RUN: ${{ inputs.kernel_run_id }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$REQUESTED_RUN" ]]; then
+            [[ "$REQUESTED_RUN" =~ ^[0-9]+$ ]]
+            candidates="$REQUESTED_RUN"
+          else
+            candidates="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/build.yml/runs?per_page=10" --jq '.workflow_runs[].id')"
+          fi
+          selected=''
+          for attempt in {1..120}; do
+            active=0
+            for candidate in $candidates; do
+              jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$candidate/jobs")"
+              passed="$(jq '[.jobs[] | select(.name == "kernel" and .conclusion == "success")] | length' <<< "$jobs")"
+              if [[ "$passed" -gt 0 ]]; then selected="$candidate"; break; fi
+              pending="$(jq '[.jobs[] | select(.name == "kernel" and .status != "completed")] | length' <<< "$jobs")"
+              active=$((active + pending))
+            done
+            [[ -z "$selected" ]] || break
+            [[ "$active" -gt 0 ]] || break
+            echo "Waiting for the active kernel job (check $attempt)"
+            sleep 30
+          done
+          [[ -n "$selected" ]] || { echo 'No successful kernel job found'; exit 1; }
+          echo "run_id=$selected" >> "$GITHUB_OUTPUT"
+          echo "Using kernel artifacts from run $selected"
+      - uses: actions/download-artifact@v4
+        with:
+          name: TYC4A-Linux-6.18.63-UNTESTED
+          path: artifacts/
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.kernel.outputs.run_id }}
+      - name: Build Debian rootfs and SD layout candidate
+        run: sudo bash scripts/build-rootfs.sh
+      - name: Upload Debian candidate and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TYC4A-Debian-trixie-UNTESTED-NO-BOOTLOADER
+          path: artifacts/debian/
+          retention-days: 14
+          if-no-files-found: error

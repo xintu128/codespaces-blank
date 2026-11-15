@@ -17,7 +17,9 @@ mmdebstrap --mode=root --architectures=arm64 --variant=minbase \
     'deb https://deb.debian.org/debian trixie-updates main' \
     'deb https://security.debian.org/debian-security trixie-security main'
 release="$(cat artifacts/kernel/kernelrelease)"
-tar -xJf artifacts/kernel/modules.tar.xz -C "$rootfs"
+[[ -L "$rootfs/lib" ]]
+tar --keep-directory-symlink -xJf artifacts/kernel/modules.tar.xz -C "$rootfs"
+[[ -L "$rootfs/lib" ]]
 depmod -b "$rootfs" "$release"
 mkdir -p "$rootfs/boot/dtb/rockchip" "$rootfs/boot/extlinux" \
     "$rootfs/etc/systemd/network" "$rootfs/etc/ssh" "$rootfs/usr/share/tyc4a"

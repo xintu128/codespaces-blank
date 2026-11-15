@@ -3,6 +3,13 @@ name: TYC4A ARM64 kernel and Debian candidate
 on:
   push:
     branches: [main]
+    paths:
+      - kernel.env
+      - patches/**
+      - board/**
+      - scripts/build-kernel.sh
+      - scripts/verify-artifacts.py
+      - scripts/test-assemble-image.py
   workflow_dispatch:
 
 permissions:
@@ -51,7 +58,7 @@ jobs:
       - name: Install rootfs tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends mmdebstrap debian-archive-keyring e2fsprogs fdisk zstd file
+          sudo apt-get install -y --no-install-recommends mmdebstrap debian-archive-keyring e2fsprogs fdisk zstd file kmod
       - name: Build Debian rootfs and SD layout candidate
         run: sudo bash scripts/build-rootfs.sh
       - name: Upload Debian candidate and logs

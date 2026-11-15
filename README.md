@@ -18,6 +18,8 @@ It uploads logs even when compilation fails.
 The second job builds a Debian trixie ARM64 rootfs and a partitioned SD candidate.
 Both jobs save checksums and validation metadata.
 Run once by pushing the build branch, or use **Actions → Run workflow** on the default branch.
+The separate Debian workflow reuses an existing successful kernel job.
+Rootfs-only changes trigger that workflow without recompiling the kernel.
 
 Artifacts expire after 14 days.
 The rootfs contains locked `root` and `tyc4a` accounts. Configure credentials offline before use.
