@@ -7,12 +7,21 @@ on:
       - .github/workflows/debian.yml
       - scripts/build-rootfs.sh
       - scripts/assemble-image.py
+      - scripts/build-experimental-dtb.sh
+      - scripts/verify-experimental.py
+      - experimental/**
   workflow_dispatch:
     inputs:
       kernel_run_id:
         description: Kernel build run ID; empty selects the latest successful kernel job
         required: false
         type: string
+      dtb_flavor:
+        description: Development DTB flavor; both remain hardware untested
+        required: true
+        default: experimental-sd
+        type: choice
+        options: [experimental-sd, v07]
 
 permissions:
   contents: read
@@ -31,7 +40,7 @@ jobs:
       - name: Install rootfs tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends mmdebstrap debian-archive-keyring e2fsprogs fdisk zstd file kmod gh
+          sudo apt-get install -y --no-install-recommends mmdebstrap debian-archive-keyring e2fsprogs fdisk zstd file kmod gh clang device-tree-compiler
       - name: Select a compiled kernel
         id: kernel
         env:
@@ -70,7 +79,9 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ steps.kernel.outputs.run_id }}
       - name: Build Debian rootfs and SD layout candidate
-        run: sudo bash scripts/build-rootfs.sh
+        env:
+          DTB_FLAVOR: ${{ inputs.dtb_flavor || 'experimental-sd' }}
+        run: sudo env TYC4A_DTB_FLAVOR="$DTB_FLAVOR" bash scripts/build-rootfs.sh
       - name: Upload Debian candidate and logs
         if: always()
         uses: actions/upload-artifact@v4

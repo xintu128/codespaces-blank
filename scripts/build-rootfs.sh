@@ -7,6 +7,15 @@ mkdir -p artifacts/debian work
 exec > >(tee artifacts/debian/rootfs-build.log) 2>&1
 python3 scripts/verify-artifacts.py artifacts/kernel
 (cd artifacts/kernel && sha256sum --check SHA256SUMS)
+flavor="${TYC4A_DTB_FLAVOR:-v07}"
+case "$flavor" in
+    v07) selected_dtb="$repo/artifacts/kernel/rk3566-tyc4a.dtb" ;;
+    experimental-sd)
+        bash scripts/build-experimental-dtb.sh
+        selected_dtb="$repo/artifacts/experimental/rk3566-tyc4a-sd-experimental.dtb"
+        ;;
+    *) echo "Unknown DTB flavor: $flavor"; exit 1 ;;
+esac
 rootfs="$repo/work/debian-rootfs"
 [[ ! -e "$rootfs" ]]
 mmdebstrap --mode=root --architectures=arm64 --variant=minbase \
@@ -24,9 +33,13 @@ depmod -b "$rootfs" "$release"
 mkdir -p "$rootfs/boot/dtb/rockchip" "$rootfs/boot/extlinux" \
     "$rootfs/etc/systemd/network" "$rootfs/etc/ssh" "$rootfs/usr/share/tyc4a"
 install -m 0644 artifacts/kernel/Image "$rootfs/boot/Image"
-install -m 0644 artifacts/kernel/rk3566-tyc4a.dtb "$rootfs/boot/dtb/rockchip/"
+install -m 0644 "$selected_dtb" "$rootfs/boot/dtb/rockchip/rk3566-tyc4a.dtb"
+install -m 0644 artifacts/kernel/rk3566-tyc4a.dtb "$rootfs/boot/dtb/rockchip/rk3566-tyc4a-v07.dtb"
 cp artifacts/kernel/kernel.config "$rootfs/boot/config-$release"
 cp artifacts/kernel/validation.json "$rootfs/usr/share/tyc4a/"
+if [[ "$flavor" == experimental-sd ]]; then
+    cp artifacts/experimental/validation.json "$rootfs/usr/share/tyc4a/validation.json"
+fi
 cp README.md "$rootfs/usr/share/tyc4a/README.md"
 printf 'tyc4a\n' > "$rootfs/etc/hostname"
 printf '127.0.0.1 localhost\n127.0.1.1 tyc4a\n::1 localhost ip6-localhost ip6-loopback\n' > "$rootfs/etc/hosts"
@@ -40,6 +53,9 @@ LABEL tyc4a-v07-UNTESTED
   FDT /boot/dtb/rockchip/rk3566-tyc4a.dtb
   APPEND root=PARTUUID=74c4a007-01 rootfstype=ext4 rootwait rw console=ttyS2,1500000n8 earlycon=uart8250,mmio32,0xfe660000
 EOF
+if [[ "$flavor" == experimental-sd ]]; then
+    sed -i 's/tyc4a-v07-UNTESTED/tyc4a-sd-experimental-UNTESTED/g; s/TYC4A V0.7 - SD AND PMIC DISABLED - HARDWARE UNTESTED/TYC4A experimental SD - HARDWARE UNTESTED/' "$rootfs/boot/extlinux/extlinux.conf"
+fi
 cat > "$rootfs/etc/systemd/network/20-wired.network" <<'EOF'
 [Match]
 Name=en* eth*
@@ -57,12 +73,14 @@ chroot "$rootfs" /usr/lib/systemd/systemd --version
 chroot "$rootfs" dpkg-query -W > artifacts/debian/packages.tsv
 cat > artifacts/debian/READ-ME-FIRST.txt <<'EOF'
 TYC4A Debian trixie ARM64 development candidate. Not an Armbian release.
-No hardware boot test. V0.7 keeps PMIC, SD, SDIO and eMMC disabled.
-The kernel cannot mount the SD rootfs with this DTB.
+No hardware boot test. The selected DTB flavor appears in validation.json.
+V0.7 keeps PMIC and SD disabled; it cannot mount the SD rootfs.
+The experimental SD flavor enables PMIC, SD and UART. CPU DVFS stays disabled.
+Both flavors keep SDIO and eMMC disabled. Hardware behavior remains untested.
 The image contains a partition layout, kernel, DTB, modules and rootfs.
 It contains NO Rockchip loader, U-Boot, trust firmware or Android partitions.
 Stock U-Boot starts Android first. SD discovery has not been established.
-Do not write this image to internal eMMC. No flashing is authorized.
+Internal installation is not validated. This file is a development candidate.
 Both root and tyc4a accounts are locked. Set a password offline before use.
 The extlinux serial port is a candidate derived from the Android earlycon address.
 Display, keyboard, Wi-Fi, regulators and SD boot remain unverified.
@@ -81,12 +99,25 @@ fdisk -l "$image" > artifacts/debian/partition-layout.txt
 zstd -T2 -6 --rm "$image"
 python3 - <<'PY'
 import json
+import shutil
 from pathlib import Path
 data = json.loads(Path('artifacts/kernel/validation.json').read_text())
+experimental = Path('artifacts/experimental/validation.json')
+if experimental.exists():
+    data.update(json.loads(experimental.read_text()))
+    data.pop('v07_disabled_nodes', None)
+    shutil.copytree('artifacts/experimental', 'artifacts/debian/experimental')
+else:
+    data['dtb_flavor'] = 'v07'
 data.update(debian_suite='trixie', architecture='arm64', rootfs_chroot_test='pass',
             rootfs_ext4_check='pass', bootable_claim=False,
             accounts_locked=True, armbian_release=False)
 Path('artifacts/debian/validation.json').write_text(json.dumps(data, indent=2) + '\n')
 PY
-(cd artifacts/debian && sha256sum *.zst *.json *.txt *.tsv > SHA256SUMS)
+(
+    cd artifacts/debian
+    files=(*.zst *.json *.txt *.tsv)
+    if [[ -d experimental ]]; then files+=(experimental/*); fi
+    sha256sum "${files[@]}" > SHA256SUMS
+)
 printf 'Debian candidate assembled. Hardware boot remains untested.\n'

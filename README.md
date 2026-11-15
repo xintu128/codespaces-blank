@@ -1,6 +1,6 @@
 # TYC4A RK3566 Linux development build
 
-Hardware boot is **UNTESTED**. Do not flash internal eMMC or overwrite Android.
+Hardware boot is **UNTESTED**. Internal installation has not been validated.
 V0.7 disables RK809/I2C0, SDMMC0, SDIO and internal eMMC.
 This DTB cannot mount an SD root filesystem.
 
@@ -20,6 +20,10 @@ Both jobs save checksums and validation metadata.
 Run once by pushing the build branch, or use **Actions → Run workflow** on the default branch.
 The separate Debian workflow reuses an existing successful kernel job.
 Rootfs-only changes trigger that workflow without recompiling the kernel.
+That workflow defaults to the experimental SD/serial DTB and also supports V0.7.
+The experimental DTB enables PMIC, IO domains, SD and UART2 using vendor source mappings.
+It limits SD to 3.3 V / 50 MHz and disables CPU DVFS until the CPU regulator is ported.
+The kernel artifact continues to preserve the original V0.7 DTB.
 
 Artifacts expire after 14 days.
 The rootfs contains locked `root` and `tyc4a` accounts. Configure credentials offline before use.
