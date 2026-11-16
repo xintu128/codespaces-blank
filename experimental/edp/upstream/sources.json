@@ -1,0 +1,37 @@
+{
+  "upstream_author": "Damon Ding <damon.ding@rock-chips.com>",
+  "retrieved": "2026-11-16",
+  "note": "Patch bodies extracted from public mailing-list HTML. Mirrors redact some addresses. Backport patches adapt the old APIs; original extracted bodies are preserved here.",
+  "sources": [
+    {
+      "file": "v4-bindings.patch",
+      "url": "https://lists.openwall.net/linux-kernel/2026/10/30/498",
+      "extracted_patch_sha256": "d8d7e5962cc745faa717099ab242ae2fcff2c6312d577c29cb2eabba13a93432"
+    },
+    {
+      "file": "v4-bridge.patch",
+      "url": "https://lists.openwall.net/linux-kernel/2026/10/30/499",
+      "extracted_patch_sha256": "7d9017e107b42fb23738f03209eaa5972edbbd2412c695e53db58abc6127e36a"
+    },
+    {
+      "file": "v4-rockchip.patch",
+      "url": "https://lists.openwall.net/linux-kernel/2026/10/30/504",
+      "extracted_patch_sha256": "23f665c49722491d22c30b99cd826314cf88907249fe04967f30a44667c89bef"
+    },
+    {
+      "file": "v6-bindings.patch",
+      "url": "https://lkml.iu.edu/hypermail/linux/kernel/2611.1/21493.html",
+      "extracted_patch_sha256": "9d3b4338e6499852612d8e2824952cb83b4e4e01456de567097ef4c9c2b955d2"
+    },
+    {
+      "file": "v6-phy.patch",
+      "url": "https://lkml.iu.edu/hypermail/linux/kernel/2611.1/21496.html",
+      "extracted_patch_sha256": "977801bd03e4c90958ac90ad0ea37663b6cea4faf98775a38f8fb0370b4cdcd3"
+    },
+    {
+      "file": "v6-dts.patch",
+      "url": "https://lkml.iu.edu/hypermail/linux/kernel/2611.1/21494.html",
+      "extracted_patch_sha256": "4cacb27a540719c68cbaf21e2fbd717280b2e7b69ebb6f5b14c2aeebb0eece2e"
+    }
+  ]
+}
