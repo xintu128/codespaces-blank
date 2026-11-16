@@ -1,0 +1,15 @@
+[Unit]
+Description=Record TYC4A SD userspace boot progress
+DefaultDependencies=no
+After=systemd-remount-fs.service
+Before=sysinit.target
+ConditionPathExists=/usr/local/sbin/tyc4a-boot-evidence
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/tyc4a-boot-evidence
+TimeoutStartSec=30
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target
