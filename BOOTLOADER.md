@@ -1,6 +1,7 @@
 # Vendor SD loader preparation
 
-Hardware boot remains untested. This tool prepares regular image files.
+The vendor-loader plus diagnostic SD configuration has booted Debian to multi-user state on one board.
+See [the boot test](docs/BOOT-TEST-2026-11-16.md) for scope and evidence. This tool prepares regular image files.
 
 The stock boot selection script runs `rkimgtest mmc 1` before selecting SD.
 Rockchip's implementation reads LBA 64 and accepts the `RKNS` header.
@@ -40,8 +41,8 @@ The file previously called `uboot-test.img` is identical to the original U-Boot.
 
 Adding the RKNS header should satisfy the stock SD selection check.
 This is an inference from the source and local firmware strings.
-It does not establish BootROM priority, SPL media selection, or successful Linux handoff.
-Those stages still require a real boot log.
+A later diagnostic SD boot confirmed successful Linux handoff and SD rootfs execution.
+There is no serial trace identifying every BootROM/SPL decision, and repeated cold/warm boots remain untested.
 
 Sources:
 

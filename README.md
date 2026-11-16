@@ -1,6 +1,7 @@
 # TYC4A RK3566 Linux development build
 
-Hardware boot is **UNTESTED**. Internal installation has not been validated.
+A diagnostic SD configuration has **booted Linux 6.18.63 and Debian trixie ARM64 to multi-user state on one TYC4A**.
+See [the hardware boot test](docs/BOOT-TEST-2026-11-16.md). Display, networking, credentials and internal installation remain incomplete.
 V0.7 disables RK809/I2C0, SDMMC0, SDIO and internal eMMC.
 This DTB cannot mount an SD root filesystem.
 
@@ -36,9 +37,11 @@ The candidate includes an ext4 partition, kernel, DTB, modules and extlinux conf
 The first partition starts at 16 MiB. Its PARTUUID is `74c4a007-01`.
 No Rockchip loader, U-Boot, trust firmware or Android partition is included.
 The original U-Boot starts Android before its distribution scan.
-SD scanning and extlinux boot have not been verified on this machine.
+The local vendor-loader plus diagnostic SD configuration has completed an SD boot on this machine.
+This does not validate the disabled-storage V0.7 DTB or make the cloud image a complete bootloader image.
 The UART setting derives from the Android earlycon address. It needs a hardware test.
-PMIC rails, SD power, display, keyboard and Wi-Fi still need porting and testing.
+The diagnostic boot exercised PMIC/SD integration and mounted the SD rootfs read-write.
+Display, keyboard, network and comprehensive power testing remain incomplete.
 An assembled `.img` file is not evidence of successful boot.
 
 ## Reproduce on ARM64 Linux
@@ -63,6 +66,7 @@ Rootfs tool: <https://manpages.debian.org/trixie/mmdebstrap/mmdebstrap.1.en.html
 The local source archive matches the official checksum.
 The original patch applies to clean 6.18.63 files.
 The DTB compiles locally. Full kernel and rootfs builds require the Linux workflow.
-No board has been boot-tested with these outputs.
+The diagnostic SD variant has passed the limited hardware boot test linked above.
+The original V0.7 DTB remains a preserved offline-validation artifact.
 
 See [BOOTLOADER.md](BOOTLOADER.md) for the validated local vendor-loader preparation path.
