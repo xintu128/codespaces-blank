@@ -9,7 +9,7 @@ on:
       - scripts/assemble-image.py
       - scripts/build-experimental-dtb.sh
       - scripts/verify-experimental.py
-      - experimental/**
+      - experimental/sd/**
   workflow_dispatch:
     inputs:
       kernel_run_id:
