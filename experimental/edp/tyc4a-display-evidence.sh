@@ -5,6 +5,7 @@ sleep 20
 directory=/var/log/tyc4a-boots/$(cat /proc/sys/kernel/random/boot_id)
 mkdir -p "$directory"
 umask 077
+dmesg > "$directory/dmesg-after-20s.txt" 2>&1 || true
 {
     uname -a
     cat /proc/uptime
@@ -39,11 +40,5 @@ umask 077
             fi
         done
     done
-    for state in /sys/kernel/debug/dri/*/state; do
-        [ -f "$state" ] || continue
-        printf '\nDRM state: %s\n' "$state"
-        cat "$state" || true
-    done
 } > "$directory/display-after-20s.txt" 2>&1
-dmesg > "$directory/dmesg-after-20s.txt" 2>&1 || true
 sync

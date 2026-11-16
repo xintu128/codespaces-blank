@@ -23,6 +23,13 @@ def verify(dtb):
     edp = n['/edp@fe0c0000']
     assert by_phandle[cells(edp['phys'])[0]] == '/syscon@fdcb0000/phy@0'
     assert 'force-hpd' in edp
+    # analogix_dp-rockchip.c uses encoder_set_crtc_endpoint_id(..., 0, 0).
+    # VP1 is the remote port number; the local bridge endpoint must be zero.
+    bridge_input = '/edp@fe0c0000/ports/port@0/endpoint@0'
+    vop_output = '/vop@fe040000/ports/port@1/endpoint@3'
+    assert cells(n[bridge_input]['reg']) == (0,)
+    assert by_phandle[cells(n[bridge_input]['remote-endpoint'])[0]] == vop_output
+    assert cells(n[vop_output]['reg']) == (3,)
     bl = n['/backlight-edp']
     pwm = cells(bl['pwms'])
     assert by_phandle[pwm[0]] == '/pwm@fe6e0000' and pwm[1:] == (0, 25000, 0)
@@ -36,6 +43,7 @@ def verify(dtb):
             other = by_phandle[cells(props['remote-endpoint'])[0]]
             assert by_phandle[cells(n[other]['remote-endpoint'])[0]] == path
     return {'dtb_format': 'pass', 'reciprocal_display_graph': 'pass',
+            'bridge_input_endpoint_zero': 'pass',
             'panel_gpio_pwm_mapping': 'pass', 'internal_emmc_enabled': False,
             'display_hardware_tested': False, 'kernel_release': '6.18.63-tyc4a-edp01'}
 

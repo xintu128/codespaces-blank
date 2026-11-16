@@ -66,8 +66,10 @@
 &edp_in {
 	#address-cells = <1>;
 	#size-cells = <0>;
-	edp_in_vp1: endpoint@1 {
-		reg = <1>;
+	// The bridge driver looks up port 0, endpoint 0. VP1 is identified by
+	// the remote VOP port, not this endpoint number.
+	edp_in_vp1: endpoint@0 {
+		reg = <0>;
 		remote-endpoint = <&vp1_out_edp>;
 	};
 };

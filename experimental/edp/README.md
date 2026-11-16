@@ -59,3 +59,26 @@ retain its extlinux entry. Before rebooting a board used as an Android-hosted
 build machine, finish all processes, unmount all chroot binds and restore its
 temporary DNS/service-policy files. Retrieve persistent boot evidence after a
 test and record the result against this exact release and artifact hashes.
+
+## First hardware result and route correction
+
+The first edp01 kernel booted to Debian multi-user mode on 2026-11-16. The
+eDP connector reported 1920x1080, but the screen remained black. The journal
+recorded `Invalid interface id 0 on vp1`, followed by video stream clock and
+page-flip timeouts. The USB keyboard successfully registered as a HID device.
+
+The bridge driver's `rockchip_drm_encoder_set_crtc_endpoint_id(..., 0, 0)`
+requires its input endpoint to be numbered zero. VP1 is identified by the
+remote VOP port, whose eDP endpoint remains number 3. The original input
+endpoint was incorrectly numbered 1. The corrected DTB changes only that
+unit address and `reg` to zero; the local SD installation names this revision
+edp02 and reuses the verified edp01 Image and modules. The verifier now rejects
+the original route. The second hardware boot removed the invalid-interface,
+bridge-commit and page-flip errors, created fb0, and enabled the backlight. The
+keyboard was present after its initial re-enumeration. The observed screen was
+still gray with no visible text, so display operation is not confirmed. The
+user also reported flickering in the original Android system; power and
+original-display stability need checking before further visual tests.
+
+The recorder no longer reads DRM debugfs state, since that read could block
+behind a stalled modeset. It saves dmesg before collecting connector status.
