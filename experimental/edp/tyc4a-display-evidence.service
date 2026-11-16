@@ -1,0 +1,12 @@
+[Unit]
+Description=Record experimental TYC4A eDP status after driver probing
+After=systemd-udev-trigger.service
+ConditionPathExists=/usr/local/sbin/tyc4a-display-evidence
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/tyc4a-display-evidence
+RuntimeMaxSec=60
+
+[Install]
+WantedBy=multi-user.target
