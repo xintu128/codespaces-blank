@@ -3,7 +3,10 @@
 The SD diagnostics configuration has booted the real board to Debian multi-user
 in 9.3 seconds with Linux 6.18.63-tyc4a-v07. Its captured kernel log reports
 `No available vop found for display-subsystem`. This experiment enables the
-internal panel; its display output has **not** been tested on hardware.
+internal panel. With the route and VP1 clock corrections below, the user
+confirmed on 2026-11-16 that the internal screen displays Debian login text
+and the USB keyboard responds to Enter. This establishes a working text
+console, not complete peripheral, power-management or desktop support.
 
 The Android live device tree identifies an enabled Analogix RK3568-compatible
 eDP controller and Naneng PHY, VOP video port 1, GPIO0_C4 panel enable,
@@ -77,8 +80,35 @@ the original route. The second hardware boot removed the invalid-interface,
 bridge-commit and page-flip errors, created fb0, and enabled the backlight. The
 keyboard was present after its initial re-enumeration. The observed screen was
 still gray with no visible text, so display operation is not confirmed. The
-user also reported flickering in the original Android system; power and
-original-display stability need checking before further visual tests.
+user also reported flickering in the original Android system, then confirmed
+that fixing the power cable stopped the Android flickering. A repeat Linux
+test with stable power still showed gray without text. Its framebuffer and
+additional display evidence were retrieved: the framebuffer contains Debian's
+login prompt and the diagnostic message, while VP1 is active at 1920x1080.
+The panel was still gray, so generated pixels have not reached a usable
+physical display.
 
-The recorder no longer reads DRM debugfs state, since that read could block
-behind a stalled modeset. It saves dmesg before collecting connector status.
+## VP1 pixel clock correction (local DTB revision edp03)
+
+The stable-power boot's clock summary reports `dclk_vop1` at **24 MHz** under
+HPLL, despite the mode requiring **148.5 MHz**. The original Android system
+instead uses VPLL at 742.5 MHz and divides it down to 148.5 MHz. The pinned
+6.18.63 clock driver does not list 742.5 MHz, but does support 594 MHz.
+
+The corrected VOP assignments set VPLL to 594 MHz, select it as VP1's pixel
+clock parent, and request 148.5 MHz (divide by four). This is explicit because
+the RK3568 DCLK composite has `CLK_SET_RATE_NO_REPARENT` and does not propagate
+rate changes to its parent. Only the VOP's three clock-assignment properties
+change relative to edp02. The verifier checks the assignments and rejects the
+previous DTB. The existing Image and modules are reused. After this correction,
+the user confirmed visible Debian login text and a working Enter key. The
+corrected boot's actual clock summary has not yet been retrieved; the last
+retrieved evidence is from the preceding gray-screen boot. The board is left
+running the working Linux console rather than rebooted solely for log retrieval.
+
+The recorder saves dmesg before collecting connector status. Additional DRM,
+clock and PWM reads now have individual time limits, since DRM state could
+block behind a stalled modeset. The separate framebuffer helper saves the
+fbdev geometry, color layout and at most 16 MiB of existing pixels without
+changing the mode or drawing directly into framebuffer memory. Install it as
+`/usr/local/sbin/tyc4a-framebuffer-evidence` with the shell recorder.

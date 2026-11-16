@@ -41,4 +41,14 @@ dmesg > "$directory/dmesg-after-20s.txt" 2>&1 || true
         done
     done
 } > "$directory/display-after-20s.txt" 2>&1
+printf '\nTYC4A Linux display diagnostic - kernel 6.18.63-tyc4a-edp01\n' > /dev/tty1 || true
+for source in /sys/kernel/debug/dri/*/state /sys/kernel/debug/clk/clk_summary /sys/kernel/debug/pwm; do
+    [ -f "$source" ] || continue
+    name=$(printf '%s' "$source" | tr '/' '_')
+    timeout -k 1 3 cat "$source" > "$directory/$name.txt" 2>&1 || true
+done
+timeout -k 1 6 python3 /usr/local/sbin/tyc4a-framebuffer-evidence "$directory" > "$directory/framebuffer-read.txt" 2>&1 || true
+if [ -r /sys/firmware/fdt ]; then
+    sha256sum /sys/firmware/fdt > "$directory/live-fdt-sha256.txt" 2>&1 || true
+fi
 sync

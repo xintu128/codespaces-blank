@@ -30,6 +30,16 @@ def verify(dtb):
     assert cells(n[bridge_input]['reg']) == (0,)
     assert by_phandle[cells(n[bridge_input]['remote-endpoint'])[0]] == vop_output
     assert cells(n[vop_output]['reg']) == (3,)
+    # RK3568 binding IDs: PLL_VPLL=5, DCLK_VOP1=224. Set both the PLL and
+    # divider explicitly: this composite clock has no rate propagation.
+    vop = n['/vop@fe040000']
+    clocks = cells(vop['assigned-clocks'])
+    parents = cells(vop['assigned-clock-parents'])
+    assert len(clocks) == 4 and clocks[0] == clocks[2]
+    assert by_phandle[clocks[0]] == '/clock-controller@fdd20000'
+    assert clocks[1::2] == (5, 224), clocks
+    assert parents == (0, clocks[0], 5), parents
+    assert cells(vop['assigned-clock-rates']) == (594000000, 148500000)
     bl = n['/backlight-edp']
     pwm = cells(bl['pwms'])
     assert by_phandle[pwm[0]] == '/pwm@fe6e0000' and pwm[1:] == (0, 25000, 0)
@@ -44,6 +54,7 @@ def verify(dtb):
             assert by_phandle[cells(n[other]['remote-endpoint'])[0]] == path
     return {'dtb_format': 'pass', 'reciprocal_display_graph': 'pass',
             'bridge_input_endpoint_zero': 'pass',
+            'vp1_pixel_clock_assignment': 'pass',
             'panel_gpio_pwm_mapping': 'pass', 'internal_emmc_enabled': False,
             'display_hardware_tested': False, 'kernel_release': '6.18.63-tyc4a-edp01'}
 

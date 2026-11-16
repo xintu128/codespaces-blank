@@ -45,7 +45,15 @@
 };
 
 &pwm4 { status = "okay"; };
-&vop { status = "okay"; };
+&vop {
+	// The vendor loader leaves HPLL bypassed at 24 MHz. DCLK_VOP1 cannot
+	// reparent itself or retune its parent, so provide a 594 MHz VPLL and
+	// divide by four for the panel's exact 148.5 MHz pixel clock.
+	assigned-clocks = <&cru PLL_VPLL>, <&cru DCLK_VOP1>;
+	assigned-clock-parents = <0>, <&cru PLL_VPLL>;
+	assigned-clock-rates = <594000000>, <148500000>;
+	status = "okay";
+};
 &vop_mmu { status = "okay"; };
 &edp_phy { status = "okay"; };
 
