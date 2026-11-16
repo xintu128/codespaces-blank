@@ -3,7 +3,7 @@
 The local SD configuration has **booted Linux 6.18.63 and Debian trixie ARM64 on one TYC4A, with visible internal-screen login text and a USB keyboard responding to Enter**.
 The eDP route and VP1 pixel clock fixes were required. See [the console test](CONSOLE-TEST-2026-11-16.md),
 [eDP build instructions](experimental/edp/README.md), and [the earlier boot test](docs/BOOT-TEST-2026-11-16.md).
-Networking, comprehensive power/peripheral tests and internal installation remain incomplete.
+A separate RTL8822CS Wi-Fi build has associated with a 5 GHz network and accepted SSH key login on the local card, but repeated connection drops remain under investigation. See [the Wi-Fi/SSH test](docs/WIFI-TEST-2026-11-16.md). Comprehensive power/peripheral tests and internal installation remain incomplete.
 The preserved V0.7 DTB disables RK809/I2C0, SDMMC0, SDIO and internal eMMC;
 that original DTB cannot mount an SD root filesystem.
 

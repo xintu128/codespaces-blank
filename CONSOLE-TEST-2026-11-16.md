@@ -39,10 +39,10 @@ the VOP's assigned clocks, parents and rates; Image and modules were reused.
    to 594 MHz, selecting it as VP1's parent and dividing to 148.5 MHz produced
    the user-confirmed visible login text and working Enter key.
 
-The post-fix clock summary and raw logs have not yet been retrieved, because
-the board is being kept in the working Linux session. The hardware result is
-the user's direct observation; the preceding gray-screen boot has saved DRM,
-clock, framebuffer and journal evidence locally.
+The post-fix logs were subsequently retrieved from boot
+`397633a8-a118-4b26-a54d-35828855f7bd`. The clock summary confirms VPLL at
+594,000,000 Hz and `dclk_vop1` at 148,500,000 Hz. This supplements the user's
+direct observation with saved clock, framebuffer and journal evidence.
 
 ## Limits and preservation
 
