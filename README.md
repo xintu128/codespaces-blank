@@ -64,3 +64,5 @@ The local source archive matches the official checksum.
 The original patch applies to clean 6.18.63 files.
 The DTB compiles locally. Full kernel and rootfs builds require the Linux workflow.
 No board has been boot-tested with these outputs.
+
+See [BOOTLOADER.md](BOOTLOADER.md) for the validated local vendor-loader preparation path.
