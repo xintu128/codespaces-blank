@@ -1,0 +1,49 @@
+name: TYC4A RTL8822CS Wi-Fi kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - experimental/wifi/**
+      - .github/workflows/wifi.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tyc4a-wifi-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential bc bison flex libssl-dev libelf-dev device-tree-compiler python3 curl xz-utils rsync kmod cpio
+      - name: Download pinned source and build Wi-Fi kernel
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          source kernel.env
+          export TYC4A_BUILD_WORK="$PWD/work/wifi01"
+          export TYC4A_BUILD_JOBS="$(nproc)"
+          mkdir -p "$TYC4A_BUILD_WORK"
+          curl --fail --location --retry 4 --retry-all-errors \
+            "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}.tar.xz" \
+            -o "$TYC4A_BUILD_WORK/linux-${KERNEL_VERSION}.tar.xz"
+          bash experimental/wifi/build.sh
+      - name: Upload experimental kernel and build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TYC4A-Linux-6.18.63-wifi01-WIFI-UNTESTED
+          path: |
+            work/wifi01/artifacts/
+            work/wifi01/build.log
+          if-no-files-found: error
+          retention-days: 14
