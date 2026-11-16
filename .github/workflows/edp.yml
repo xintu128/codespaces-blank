@@ -1,0 +1,52 @@
+name: TYC4A experimental internal eDP kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - experimental/edp/**
+      - experimental/usb/**
+      - experimental/diagnostics/*.dts
+      - experimental/sd/*.dts
+      - .github/workflows/edp.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tyc4a-edp-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential bc bison flex libssl-dev libelf-dev device-tree-compiler python3 curl xz-utils rsync kmod cpio
+      - name: Download pinned source and build experimental eDP kernel
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          source kernel.env
+          export TYC4A_BUILD_WORK="$PWD/work/edp01"
+          export TYC4A_BUILD_JOBS="$(nproc)"
+          mkdir -p "$TYC4A_BUILD_WORK"
+          curl --fail --location --retry 4 --retry-all-errors \
+            "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}.tar.xz" \
+            -o "$TYC4A_BUILD_WORK/linux-${KERNEL_VERSION}.tar.xz"
+          bash experimental/edp/build.sh
+      - name: Upload experimental kernel and build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TYC4A-Linux-6.18.63-edp01-DISPLAY-UNTESTED
+          path: |
+            work/edp01/artifacts/
+            work/edp01/build.log
+          if-no-files-found: error
+          retention-days: 14
