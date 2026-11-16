@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+// RTL8822CS wiring confirmed from the original Android DT and live SDIO ID.
+#include "../usb/rk3566-tyc4a-edp01-usb.dts"
+
+/ {
+ model = "TYC4A RK3566 eDP USB and RTL8822CS Wi-Fi test 01";
+ aliases { mmc1 = &sdmmc1; };
+
+ vcc_wifi: regulator-wifi {
+  compatible = "regulator-fixed";
+  regulator-name = "vcc_wifi";
+  // Stock DT has no voltage constraints; preserve that rather than guess.
+  gpio = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
+  enable-active-high;
+  regulator-boot-on;
+  regulator-always-on;
+  pinctrl-names = "default";
+  pinctrl-0 = <&tyc4a_wifi_power>;
+ };
+
+ sdio_pwrseq: sdio-pwrseq {
+  compatible = "mmc-pwrseq-simple";
+  clocks = <&rk809 1>;
+  clock-names = "ext_clock";
+  reset-gpios = <&gpio2 RK_PB1 GPIO_ACTIVE_LOW>;
+  post-power-on-delay-ms = <200>;
+  pinctrl-names = "default";
+  pinctrl-0 = <&tyc4a_wifi_enable>;
+ };
+};
+
+&pinctrl {
+ wifi {
+  tyc4a_wifi_power: wifi-power {
+   rockchip,pins = <1 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;
+  };
+  tyc4a_wifi_enable: wifi-enable {
+   rockchip,pins = <2 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
+  };
+ };
+};
+
+&sdmmc1 {
+ status = "okay";
+ bus-width = <4>;
+ max-frequency = <50000000>;
+ cap-sd-highspeed;
+ cap-sdio-irq;
+ non-removable;
+ no-sd;
+ no-mmc;
+ no-1-8-v;
+ keep-power-in-suspend;
+ mmc-pwrseq = <&sdio_pwrseq>;
+ vqmmc-supply = <&vcc_1v8>;
+ pinctrl-names = "default";
+ pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_clk &sdmmc1_cmd>;
+};
