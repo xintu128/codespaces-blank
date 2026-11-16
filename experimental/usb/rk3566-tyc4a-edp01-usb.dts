@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+// The real Android keyboard is on fd880000 EHCI through a USB 2.0 hub.
+#include "../edp/rk3566-tyc4a-edp01.dts"
+
+/ {
+	model = "TYC4A RK3566 experimental eDP 01 and USB keyboard";
+
+	vcc5v0_usb: regulator-5v0-usb {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_usb";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	vcc5v0_host: regulator-5v0-host {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_host";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&vcc5v0_usb>;
+		gpio = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tyc4a_usb_host_enable>;
+	};
+};
+
+&pinctrl {
+	usb {
+		tyc4a_usb_host_enable: host-enable {
+			rockchip,pins = <0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+};
+
+&usb2phy1 { status = "okay"; };
+&usb2phy1_host {
+	phy-supply = <&vcc5v0_host>;
+	status = "okay";
+};
+&usb_host1_ehci { status = "okay"; };
+&usb_host1_ohci { status = "okay"; };
