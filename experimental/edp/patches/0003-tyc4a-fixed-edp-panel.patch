@@ -1,0 +1,47 @@
+diff --git a/drivers/gpu/drm/panel/panel-edp.c b/drivers/gpu/drm/panel/panel-edp.c
+index 65e2f68..d75a50e 100644
+--- a/drivers/gpu/drm/panel/panel-edp.c
++++ b/drivers/gpu/drm/panel/panel-edp.c
+@@ -1622,6 +1622,32 @@ static const struct panel_desc sharp_lq123p1jx31 = {
+ 	},
+ };
+ 
++/* Experimental TYC4A panel: timings and delays from the shipping DTB. */
++static const struct drm_display_mode tyc4a_internal_edp_mode = {
++	.clock = 148500,
++	.hdisplay = 1920,
++	.hsync_start = 1920 + 88,
++	.hsync_end = 1920 + 88 + 44,
++	.htotal = 1920 + 88 + 44 + 148,
++	.vdisplay = 1080,
++	.vsync_start = 1080 + 4,
++	.vsync_end = 1080 + 4 + 5,
++	.vtotal = 1080 + 4 + 5 + 36,
++	.flags = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
++};
++
++static const struct panel_desc tyc4a_internal_edp = {
++	.modes = &tyc4a_internal_edp_mode,
++	.num_modes = 1,
++	.bpc = 8,
++	.delay = {
++		.hpd_absent = 120,
++		.prepare_to_enable = 120,
++		.enable = 120,
++		.unprepare = 500,
++	},
++};
++
+ static const struct of_device_id platform_of_match[] = {
+ 	{
+ 		/* Must be first */
+@@ -1644,6 +1670,9 @@ static const struct of_device_id platform_of_match[] = {
+ 	 * bus.
+ 	 */
+ 	{
++		.compatible = "tyc4a,internal-edp-panel",
++		.data = &tyc4a_internal_edp,
++	}, {
+ 		.compatible = "auo,b101ean01",
+ 		.data = &auo_b101ean01,
+ 	}, {
