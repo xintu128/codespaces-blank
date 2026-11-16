@@ -1,7 +1,8 @@
 # Hardware port status
 
 The kernel artifact preserves V0.7. The additional diagnostic SD variant has booted Debian to multi-user state on one board.
-See [boot evidence and limits](docs/BOOT-TEST-2026-11-16.md).
+The later eDP/USB experiment also displays Debian login text and responds to Enter.
+See [boot evidence and limits](docs/BOOT-TEST-2026-11-16.md) and [the console test](CONSOLE-TEST-2026-11-16.md).
 The Debian workflow also offers an experimental SD/serial DTB under `experimental/sd/`.
 That DTB enables PMIC, IO domains, SD and UART2. It disables CPU DVFS.
 The V0.7 DTB cannot mount an SD rootfs.
@@ -16,7 +17,8 @@ The V0.7 DTB cannot mount an SD rootfs.
 | eMMC | Vendor controller is 0xfe310000. Internal Android uses this device. | The development DTBs keep this controller disabled. Internal installation remains untested. |
 | Wi-Fi | Vendor controller is 0xfe2c0000 with an SDIO power sequence. | Port power, reset, clock and firmware before enabling SDIO. |
 | Bootloader | Stock bootcmd starts Android before FIT, Rockchip and distro fallback. | Vendor loaders on SD booted the diagnostic configuration without internal writes or bootcmd changes. Cold/warm and repeated-boot coverage remains limited. |
-| User interface | Android confirms a connected eDP inner panel; Linux currently has no enabled VOP. | Backport RK3568 eDP controller/PHY support and port the panel/backlight, then keyboard and USB. |
+| Internal screen | Backported eDP controller/PHY and fixed panel support. Corrected bridge input endpoint and VP1's VPLL pixel clock. User confirmed visible Debian login text on local edp03 DTB. | Verify colors, brightness range, repeated boots, suspend/resume and graphical desktop. |
+| USB keyboard | Host1 power and PHY enabled; HID enumerated in saved Linux logs. User confirmed Enter response with edp03. | Test complete key layout, touchpad buttons/movement, hotplug and stability. |
 
 Successful compilation verifies syntax and build integration. It does not verify electrical behavior.
 No bootloader binary or full Android backup is published with this project.

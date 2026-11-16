@@ -1,9 +1,11 @@
 # TYC4A RK3566 Linux development build
 
-A diagnostic SD configuration has **booted Linux 6.18.63 and Debian trixie ARM64 to multi-user state on one TYC4A**.
-See [the hardware boot test](docs/BOOT-TEST-2026-11-16.md). Display, networking, credentials and internal installation remain incomplete.
-V0.7 disables RK809/I2C0, SDMMC0, SDIO and internal eMMC.
-This DTB cannot mount an SD root filesystem.
+The local SD configuration has **booted Linux 6.18.63 and Debian trixie ARM64 on one TYC4A, with visible internal-screen login text and a USB keyboard responding to Enter**.
+The eDP route and VP1 pixel clock fixes were required. See [the console test](CONSOLE-TEST-2026-11-16.md),
+[eDP build instructions](experimental/edp/README.md), and [the earlier boot test](docs/BOOT-TEST-2026-11-16.md).
+Networking, comprehensive power/peripheral tests and internal installation remain incomplete.
+The preserved V0.7 DTB disables RK809/I2C0, SDMMC0, SDIO and internal eMMC;
+that original DTB cannot mount an SD root filesystem.
 
 ## Build
 
@@ -27,7 +29,8 @@ It limits SD to 3.3 V / 50 MHz and disables CPU DVFS until the CPU regulator is 
 The kernel artifact continues to preserve the original V0.7 DTB.
 
 Artifacts expire after 14 days.
-The rootfs contains locked `root` and `tyc4a` accounts. Configure credentials offline before use.
+The cloud rootfs contains locked `root` and `tyc4a` accounts. Configure credentials offline before use.
+The tested local card has a separately configured `tyc4a` password; it is not published or embedded in cloud artifacts.
 No SSH service or default password is included.
 This is a Debian development image, not an Armbian release.
 
@@ -41,7 +44,8 @@ The local vendor-loader plus diagnostic SD configuration has completed an SD boo
 This does not validate the disabled-storage V0.7 DTB or make the cloud image a complete bootloader image.
 The UART setting derives from the Android earlycon address. It needs a hardware test.
 The diagnostic boot exercised PMIC/SD integration and mounted the SD rootfs read-write.
-Display, keyboard, network and comprehensive power testing remain incomplete.
+The later eDP/USB experiment has a working text console and Enter response on the local card.
+This does not establish networking, full keyboard/touchpad functionality, graphical desktop or comprehensive power testing.
 An assembled `.img` file is not evidence of successful boot.
 
 ## Reproduce on ARM64 Linux
